@@ -69,6 +69,14 @@ It reports only whether endpoints are configured. It never returns tokens or pas
 
 ## Bridge API
 
+Dashboard:
+
+```text
+http://127.0.0.1:8794/
+```
+
+The dashboard checks reachability of Mautic, Prospex, SuiteCRM, n8n and Jarvis without exposing credentials.
+
 Health:
 
 ```bash
