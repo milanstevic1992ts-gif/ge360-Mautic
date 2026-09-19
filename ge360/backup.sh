@@ -15,8 +15,8 @@ stamp="$(date +%Y%m%d-%H%M%S)"
 dest="backups/$stamp"
 mkdir -p "$dest"
 
-echo "Backup database..."
-docker compose exec -T db sh -lc 'mysqldump --single-transaction --quick --lock-tables=false -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"' | gzip > "$dest/mautic.sql.gz"
+echo "Backup database MariaDB..."
+docker compose exec -T db sh -lc 'mariadb-dump --single-transaction --quick --lock-tables=false -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"' | gzip > "$dest/mautic.sql.gz"
 
 echo "Backup file persistenti..."
 tar -czf "$dest/runtime.tar.gz" runtime

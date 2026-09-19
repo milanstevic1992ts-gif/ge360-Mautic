@@ -48,13 +48,13 @@ if ! docker compose up -d --build; then
   echo "Stato container:"
   docker compose ps || true
   echo
-  echo "Ultimi log MySQL:"
+  echo "Ultimi log database:"
   docker compose logs --tail=120 db || true
   exit 1
 fi
 
 echo
-echo "GE360 Mautic avviato."
+echo "GE360 Mautic avviato con database MariaDB compatibile con CPU legacy."
 echo "UI Mautic:  http://127.0.0.1:$(grep '^MAUTIC_PORT=' .env | cut -d= -f2)"
 echo "Bridge:     http://127.0.0.1:$(grep '^GE360_BRIDGE_PORT=' .env | cut -d= -f2)/health"
 echo
