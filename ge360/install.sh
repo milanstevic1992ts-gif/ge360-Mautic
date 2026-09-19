@@ -42,7 +42,16 @@ set_if_empty GE360_BRIDGE_TOKEN "$(make_secret)"
 mkdir -p runtime/config runtime/logs runtime/media/files runtime/media/images backups
 
 echo "Avvio GE360 Mautic..."
-docker compose up -d --build
+if ! docker compose up -d --build; then
+  echo
+  echo "ERRORE: lo stack non si e avviato correttamente."
+  echo "Stato container:"
+  docker compose ps || true
+  echo
+  echo "Ultimi log MySQL:"
+  docker compose logs --tail=120 db || true
+  exit 1
+fi
 
 echo
 echo "GE360 Mautic avviato."
