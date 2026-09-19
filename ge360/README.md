@@ -119,3 +119,14 @@ The stack is intentionally conservative:
 - lightweight Python bridge with no third-party Python packages.
 
 RabbitMQ/Redis can be added later if actual campaign volume justifies them.
+
+
+## Persistenza Mautic
+
+GE360 usa named volumes Docker per config, log e media di Mautic. Questo evita problemi di ownership/chown sui bind mount del filesystem host, soprattutto su sistemi con permessi o filesystem particolari.
+
+Volumi:
+- ge360-mautic_mautic-config
+- ge360-mautic_mautic-logs
+- ge360-mautic_mautic-media-files
+- ge360-mautic_mautic-media-images
