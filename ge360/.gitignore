@@ -1,0 +1,6 @@
+.env
+.mautic_env
+runtime/
+backups/
+*.sql
+*.sql.gz

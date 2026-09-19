@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ge360.local/contracts/lead.schema.json",
+  "title": "GE360 Lead",
+  "type": "object",
+  "required": ["source", "external_id"],
+  "properties": {
+    "source": {
+      "type": "string",
+      "enum": ["prospex", "suitecrm", "mautic", "website", "manual", "other"]
+    },
+    "external_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "first_name": {"type": ["string", "null"]},
+    "last_name": {"type": ["string", "null"]},
+    "company": {"type": ["string", "null"]},
+    "email": {"type": ["string", "null"], "format": "email"},
+    "phone": {"type": ["string", "null"]},
+    "city": {"type": ["string", "null"]},
+    "category": {"type": ["string", "null"]},
+    "tags": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "consent": {
+      "type": "object",
+      "properties": {
+        "marketing_email": {"type": "boolean", "default": false},
+        "marketing_whatsapp": {"type": "boolean", "default": false},
+        "source": {"type": ["string", "null"]},
+        "captured_at": {"type": ["string", "null"], "format": "date-time"}
+      },
+      "additionalProperties": false
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

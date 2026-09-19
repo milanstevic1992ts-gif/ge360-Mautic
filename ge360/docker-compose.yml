@@ -1,0 +1,100 @@
+x-mautic-volumes: &mautic-volumes
+  - ./runtime/config:/var/www/html/config
+  - ./runtime/logs:/var/www/html/var/logs
+  - ./runtime/media/files:/var/www/html/docroot/media/files
+  - ./runtime/media/images:/var/www/html/docroot/media/images
+
+x-mautic-build: &mautic-build
+  context: ..
+  dockerfile: ge360/Dockerfile
+  args:
+    MAUTIC_IMAGE: ${MAUTIC_IMAGE:-mautic/mautic:7.2-apache}
+
+x-mautic-common: &mautic-common
+  build: *mautic-build
+  env_file:
+    - .mautic_env
+  volumes: *mautic-volumes
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  depends_on:
+    db:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  db:
+    image: mysql:8.4
+    command:
+      - --innodb-buffer-pool-size=256M
+      - --max-connections=100
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin --user=$$MYSQL_USER --password=$$MYSQL_PASSWORD ping --silent"]
+      start_period: 20s
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+    mem_limit: 768m
+
+  mautic_web:
+    <<: *mautic-common
+    ports:
+      - "${MAUTIC_BIND:-127.0.0.1}:${MAUTIC_PORT:-8793}:80"
+    environment:
+      DOCKER_MAUTIC_LOAD_TEST_DATA: ${DOCKER_MAUTIC_LOAD_TEST_DATA:-false}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost/ >/dev/null || exit 1"]
+      start_period: 30s
+      interval: 15s
+      timeout: 8s
+      retries: 12
+    mem_limit: 1024m
+
+  mautic_cron:
+    <<: *mautic-common
+    environment:
+      DOCKER_MAUTIC_ROLE: mautic_cron
+    depends_on:
+      mautic_web:
+        condition: service_healthy
+    mem_limit: 512m
+
+  mautic_worker:
+    <<: *mautic-common
+    environment:
+      DOCKER_MAUTIC_ROLE: mautic_worker
+      DOCKER_MAUTIC_WORKER_MEMORY_LIMIT: 256M
+      DOCKER_MAUTIC_WORKER_TIME_LIMIT: 3600
+    depends_on:
+      mautic_web:
+        condition: service_healthy
+    mem_limit: 512m
+
+  ge360_bridge:
+    build:
+      context: ./bridge
+    ports:
+      - "${GE360_BRIDGE_BIND:-127.0.0.1}:${GE360_BRIDGE_PORT:-8794}:8080"
+    environment:
+      GE360_BRIDGE_TOKEN: ${GE360_BRIDGE_TOKEN}
+      GE360_PROSPEX_URL: ${GE360_PROSPEX_URL:-}
+      GE360_SUITECRM_URL: ${GE360_SUITECRM_URL:-}
+      GE360_N8N_URL: ${GE360_N8N_URL:-}
+      GE360_JARVIS_URL: ${GE360_JARVIS_URL:-}
+      N8N_PROSPEX_WEBHOOK_URL: ${N8N_PROSPEX_WEBHOOK_URL:-}
+      N8N_MAUTIC_WEBHOOK_URL: ${N8N_MAUTIC_WEBHOOK_URL:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    mem_limit: 128m
+
+volumes:
+  mysql-data:

@@ -1,0 +1,11 @@
+{
+  "name": "ge360/mautic-integration-bundle",
+  "description": "GE360 integration layer for Mautic",
+  "type": "mautic-plugin",
+  "license": "GPL-3.0-or-later",
+  "autoload": {
+    "psr-4": {
+      "MauticPlugin\\Ge360IntegrationBundle\\": ""
+    }
+  }
+}
