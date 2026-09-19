@@ -1,0 +1,49 @@
+name: GE360 Validate
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'ge360/**'
+      - 'plugins/Ge360IntegrationBundle/**'
+      - '.github/workflows/ge360-validate.yml'
+  pull_request:
+    paths:
+      - 'ge360/**'
+      - 'plugins/Ge360IntegrationBundle/**'
+      - '.github/workflows/ge360-validate.yml'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate PHP
+        run: |
+          find plugins/Ge360IntegrationBundle -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Validate Python
+        run: |
+          python3 -m py_compile ge360/bridge/app.py
+
+      - name: Validate shell
+        run: |
+          bash -n ge360/install.sh
+          bash -n ge360/backup.sh
+          bash -n ge360/check.sh
+
+      - name: Validate JSON contracts
+        run: |
+          python3 -m json.tool ge360/contracts/lead.schema.json >/dev/null
+
+      - name: Validate Docker Compose
+        run: |
+          cp ge360/.env.example ge360/.env
+          cp ge360/.mautic_env.example ge360/.mautic_env
+          sed -i 's/^MYSQL_PASSWORD=$/MYSQL_PASSWORD=test_password/' ge360/.env
+          sed -i 's/^MYSQL_ROOT_PASSWORD=$/MYSQL_ROOT_PASSWORD=test_root_password/' ge360/.env
+          sed -i 's/^GE360_BRIDGE_TOKEN=$/GE360_BRIDGE_TOKEN=test_bridge_token/' ge360/.env
+          docker compose --env-file ge360/.env -f ge360/docker-compose.yml config >/dev/null
